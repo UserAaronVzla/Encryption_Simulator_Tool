@@ -1,8 +1,25 @@
-Encrypt and create a <file>.calcs file containing:
-The SHA-256 hash of the original file in hex.
-The base64-encoded ciphertext of the file.
-Decrypt the .calcs file back into the original file (verifying the hash matches).
-This code uses the cryptography library for encryption/decryption, so ensure it is installed (e.g., pip install cryptography).
+The exercise is demonstrating how to handle files by applying several security-related operations: hashing, encrypting, and encoding. You have a folder containing one or more files (for instance, `file.ext`). For each file in that folder, you must create a new file named `file.ext.calcs` that contains:
+
+1. The file’s cryptographic hash (in hexadecimal format).
+2. The file’s *encrypted* contents, which are then Base64-encoded, all embedded in JSON.
+
+An example of the JSON structure for each `file.ext.calcs` might look like:
+
+```
+{
+  "filehash": "HASHINHEX",
+  "filecontents": "SOMEBASE64"
+}
+```
+
+In other words, you read the original file, compute its hash (e.g., using SHA-256), encrypt the file data (using some agreed-upon cipher), and finally Base64-encode the encrypted result to store it neatly in the JSON. The second part of the exercise asks you to perform the reverse procedure: read the `.calcs` file, decode and decrypt the data, and verify the hash matches the original file—ensuring it has not been tampered with.
+
+The key concepts illustrated here are:
+
+1. **Encoding:** Turning binary data into a textual format (Base64) so it can be stored or transmitted more easily.
+2. **Hashing:** Generating a short, fixed-length “fingerprint” of a file, allowing you to detect any changes.
+3. **Encryption:** Protecting the file contents so that only those with the right key can recover the original data.
+4. **Verification:** After decrypting, confirming the resulting file is valid by comparing the newly computed hash with the stored hash.
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 ## How to Use ##
 
