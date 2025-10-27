@@ -1,52 +1,115 @@
-The exercise is demonstrating how to handle files by applying several security-related operations: hashing, encrypting, and encoding. We have a folder containing one or more files (for instance, `file.ext`). For each file in that folder, we must create a new file named `file.ext.calcs` that contains:
+# Ransomware Technique Simulator (Educational Red-Team Lab)
+I built this project on my **Windows** workstation to practice the **red-team mechanics** common in ransomware workflows—file discovery, encryption, metadata recording, and full restoration—while strengthening my Python skills. The tool operates only on **folders I explicitly select** in my lab.
 
-1. The file’s cryptographic hash (in hexadecimal format).
-2. The file’s *encrypted* contents, which are then Base64-encoded, all embedded in JSON.
 
-An example of the JSON structure for each `file.ext.calcs` might look like:
+## Objective
+My goal is to emulate the technical steps a typical ransomware operator performs on disk, **without** any persistence, lateral movement, or network/C2, so I can:
 
+- Understand the crypto and file-handling details end-to-end.
+- Reproduce realistic artifacts for blue-team validation and detection tuning.
+- Keep the workflow fully reversible for safe demonstrations.
+
+
+### Scope & Ethics
+- **Environment:** My local, controlled **Windows** lab.
+- **Data:** Only data and directories I own and intentionally select.
+- **Non-goals:** No self-propagation, no privilege abuse, no registry persistence, no scheduled tasks, no external communication.
+
+This repository is for **education and professional practice only.**
+
+
+## How It Works
+For each input file in a target folder, I generate a sibling `*.calcs` file containing:
+
+- `filehash`: SHA-256 of the original (hex).
+- `filecontents`: the original file’s bytes, **encrypted** with Fernet (AES + HMAC, AEAD) and then **Base64-encoded**.
+
+On decryption, I reconstruct the file and verify its integrity by recomputing the SHA-256 and comparing it to `filehash`.
+
+
+### Cryptography & Key Management
+- **Cipher**: Fernet (AES + HMAC; authenticated encryption).
+- **KDF**: PBKDF2-HMAC-SHA256 derived from a user password.
+- **Salt**: Random salt stored in the `.calcs` payload so the password is the only secret needed at restore time.
+- **Integrity**: AEAD (Fernet) plus an explicit SHA-256 verification step after decryption.
+
+## Quick Start (Windows)
+Create a virtual environment (recommended) and install dependencies:
+
+```PowerShell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
+
+### Encrypt a folder
+```PowerShell
+python encrypt_files.py C:\Path\To\LabFolder [optional_password]
+```
+- Produces `file.ext.calcs` for each file.
+- Originals remain intact (no destructive behavior by default).
+
+### Decrypt and verify
+```PowerShell
+python decrypt_files.py C:\Path\To\LabFolder [optional_output_folder] [optional_password]
+```
+- Restores files from their `*.calcs` counterparts.
+- Verifies integrity by recomputing SHA-256 and comparing with `filehash`.
+
+> If I omit the password, the scripts can prompt me securely.
+
+
+## Data Format (`*.calcs`)
+Each `.calcs` is JSON. Example:
+
+```JSON
 {
   "filehash": "HASHINHEX",
-  "filecontents": "SOMEBASE64"
+  "filecontents": "SOMEBASE64",
+  "salt": "BASE64_SALT",
+  "kdf": "PBKDF2-HMAC-SHA256",
+  "kdf_iterations": 200000
 }
 ```
+> (If iterations differ in your environment, the script’s value is authoritative.)
 
-In other words, we read the original file, compute its hash (e.g., using SHA-256), encrypt the file data (using some agreed-upon cipher), and finally Base64-encode the encrypted result to store it neatly in the JSON. The second part of the exercise asks us to perform the reverse procedure: read the `.calcs` file, decode and decrypt the data, and verify the hash matches the original file—ensuring it has not been tampered with.
 
-The key concepts illustrated here are:
+### Operational Notes
+- **Performance**: CPU-bound due to KDF + crypto; I keep it single-process for clarity.
+- **Safety**: All operations are local; no network calls or persistence.
+- **Restorability**: `.calcs` bundle includes everything needed except the password.
 
-1. **Encoding:** Turning binary data into a textual format (Base64) so it can be stored or transmitted more easily.
-2. **Hashing:** Generating a short, fixed-length “fingerprint” of a file, allowing us to detect any changes.
-3. **Encryption:** Protecting the file contents so that only those with the right key can recover the original data.
-4. **Verification:** After decrypting, confirming the resulting file is valid by comparing the newly computed hash with the stored hash.
------------------------------------------------------------------------------------------------------------------------------------------------------
-## How to Use ##
 
-**For encryption:**
+### Troubleshooting
+- **InvalidToken** during decryption: wrong password or corrupted `.calcs`.
+- **Hash mismatch** after restore: indicates tampering or truncation—re-run with the correct password and intact `.calcs`.
+- **UnicodeDecodeError**: expected if you try to open binary data as text—use the decryptor.
 
-```bash
-python encrypt_files.py /path/to/folder [optional_password]
 
-```
+## Potential Extensions (Roadmap)
+- `--include/--exclude` globbing for file selection.
+- `--wipe` (delete originals after successful `.calcs` creation; for stricter simulations only).
+- `--workers N` for parallel encryption.
+- `--keyfile` mode to avoid passwords (generate/load a symmetric key).
+- Progress bar and structured logging.
+- Unit tests for round-trip and negative cases.
 
-**For decryption:**
 
-```bash
-python decrypt_files.py /path/to/folder [optional_output_folder] [optional_password]
+## License
+Educational and professional practice only. Choose a permissive license (e.g., MIT) and retain this intent in forks.
 
-```
 
-These scripts handle all the requirements:
+## Social
+- 📧 A.eskenazicohen@gmail.com
+- 💼 [LinkedIn](linkedin.com/in/aaron-eskenazi-vzla)
+- 🐈‍⬛ [GitHub](https://github.com/UserAaronVzla)
 
-- The first script creates a ```.calcs``` file for each file in the folder.
-- The ```.calcs``` files contain JSON with the file hash and base64-encoded encrypted content.
-- The second script decrypts the files and verifies the hash matches the original.
-- Both scripts use proper encryption (Fernet, which is AES-based) and secure key derivation.
 
-You'll need to install the required libraries:
 
-```bash
-pip install cryptography
 
-```
+
+
+
+
+
+
