@@ -101,7 +101,7 @@ Educational and professional practice only. Choose a permissive license (e.g., M
 
 ## Social
 - 📧 A.eskenazicohen@gmail.com
-- 💼 [LinkedIn](linkedin.com/in/aaron-eskenazi-vzla)
+- 💼 [LinkedIn](https://linkedin.com/in/aaron-eskenazi-vzla)
 - 🐈‍⬛ [GitHub](https://github.com/UserAaronVzla)
 
 
